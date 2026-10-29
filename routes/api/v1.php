@@ -35,3 +35,10 @@ Route::patch('/properties/{property}/approve', [PropertyController::class, 'appr
 
 Route::patch('/properties/{property}/reject', [PropertyController::class, 'reject'])
     ->middleware('auth:sanctum');
+// ----- Property image management -----
+
+Route::post('/properties/{property}/images', [PropertyController::class, 'storeImage'])
+    ->middleware('auth:sanctum');
+
+Route::delete('/properties/{property}/images/{image}', [PropertyController::class, 'destroyImage'])
+    ->middleware('auth:sanctum');

@@ -4,6 +4,8 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\ImageResource;
+
 
 class PropertyResource extends JsonResource
 {
@@ -28,6 +30,7 @@ class PropertyResource extends JsonResource
             'office_id' => $this->office_id,
             'owner_id' => $this->owner_id,
             'governorate_id' => $this->governorate_id,
+            'images' => ImageResource::collection($this->whenLoaded('images')),
 
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),

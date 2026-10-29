@@ -12,12 +12,18 @@ use App\Models\Property;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Contracts\PropertyImageServiceInterface;
+use App\Http\Requests\StorePropertyImageRequest;
+use App\Http\Resources\ImageResource;
+use App\Models\Image;
+
 
 class PropertyController extends Controller
 {
-    public function __construct(
-        private readonly PropertyServiceInterface $propertyService,
-    ) {}
+public function __construct(
+    private readonly PropertyServiceInterface $propertyService,
+    private readonly PropertyImageServiceInterface $propertyImageService,
+      ) {}
 
     public function index(FilterPropertyRequest $request): AnonymousResourceCollection
     {
@@ -92,5 +98,28 @@ class PropertyController extends Controller
         $stats = $this->propertyService->governorateStats();
 
         return response()->json(['data' => $stats->values()]);
+    }
+
+     public function storeImage( StorePropertyImageRequest $request,Property $property): ImageResource {
+        $image = $this->propertyImageService->store(
+        $property,
+        $request->file('image'),
+        $request->validated('alt_text'),
+        $request->validated('sort_order', 0),
+      );
+
+     return new ImageResource($image);
+   }
+
+    public function destroyImage(Request $request, Property $property,Image $image): JsonResponse {
+        $this->propertyImageService->destroy(
+        $property,
+        $image,
+        $request->user(),
+    );
+ 
+      return response()->json([
+        'message' => 'تم حذف الصورة بنجاح.',
+      ]);
     }
 }
