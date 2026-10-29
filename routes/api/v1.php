@@ -3,6 +3,11 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PropertyController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\GovernorateController;
+use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\OwnerController;
+
+
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -41,4 +46,13 @@ Route::post('/properties/{property}/images', [PropertyController::class, 'storeI
     ->middleware('auth:sanctum');
 
 Route::delete('/properties/{property}/images/{image}', [PropertyController::class, 'destroyImage'])
+    ->middleware('auth:sanctum');
+
+
+Route::get('/governorates', [GovernorateController::class, 'index']);
+
+
+Route::get('/offices', [OfficeController::class, 'index']);
+
+Route::get('/owners', [OwnerController::class, 'index'])
     ->middleware('auth:sanctum');
