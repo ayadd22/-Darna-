@@ -78,6 +78,16 @@ class Property extends Model
 
 
 
+    public function scopeMinArea(Builder $query, float|int $min): Builder
+    {
+        return $query->where('area', '>=', $min);
+    }
+
+    public function scopeMaxArea(Builder $query, float|int $max): Builder
+    {
+        return $query->where('area', '<=', $max);
+    }
+
     public function office(): BelongsTo
     {
         return $this->belongsTo(Office::class);

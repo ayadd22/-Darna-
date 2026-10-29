@@ -239,4 +239,78 @@ class FilterPropertyTest extends TestCase
             ->assertOk()
             ->assertJsonCount(2, 'data');
     }
+
+
+        // -------------------------------------------------------------------------
+    // min_area / max_area filters
+    // -------------------------------------------------------------------------
+
+    public function test_filter_by_min_area_excludes_smaller_properties(): void
+    {
+        $small = $this->availableProperty(['area' => 50]);
+        $large = $this->availableProperty(['area' => 150]);
+
+        $this->getJson('/api/v1/properties?min_area=100')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $large->id);
+    }
+
+    public function test_filter_by_max_area_excludes_larger_properties(): void
+    {
+        $small = $this->availableProperty(['area' => 50]);
+        $large = $this->availableProperty(['area' => 150]);
+
+        $this->getJson('/api/v1/properties?max_area=100')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $small->id);
+    }
+
+    public function test_min_area_greater_than_max_area_fails_validation(): void
+    {
+        $this->getJson('/api/v1/properties?min_area=200&max_area=100')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['min_area']);
+    }
+
+    public function test_negative_min_area_fails_validation(): void
+    {
+        $this->getJson('/api/v1/properties?min_area=-1')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['min_area']);
+    }
+
+    public function test_negative_max_area_fails_validation(): void
+    {
+        $this->getJson('/api/v1/properties?max_area=-1')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['max_area']);
+    }
+
+    public function test_non_numeric_min_area_fails_validation(): void
+    {
+        $this->getJson('/api/v1/properties?min_area=large')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['min_area']);
+    }
+
+    public function test_non_numeric_max_area_fails_validation(): void
+    {
+        $this->getJson('/api/v1/properties?max_area=large')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['max_area']);
+    }
+
+    public function test_filter_by_min_and_max_area_together(): void
+    {
+        $small = $this->availableProperty(['area' => 50]);
+        $match = $this->availableProperty(['area' => 120]);
+        $large = $this->availableProperty(['area' => 200]);
+
+        $this->getJson('/api/v1/properties?min_area=100&max_area=150')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $match->id);
+    }
 }

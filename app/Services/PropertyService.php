@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class PropertyService implements PropertyServiceInterface
 {
- 
+    
 
     public function create(array $validatedData, User $user): Property
     {
@@ -29,28 +29,27 @@ class PropertyService implements PropertyServiceInterface
 
         $property = Property::create($validatedData);
 
-     
-   
         $this->invalidateCollectionCaches();
 
         return $property;
     }
 
-   
-
+ 
     public function list(?User $user, array $filters = []): LengthAwarePaginator
     {
         $query = Property::query()
             ->with(['office', 'owner', 'governorate']);
 
-     
+        
         if (! $user || $user->role === UserRoleEnum::USER) {
             $query->where('status', PropertyStatusEnum::AVAILABLE)
                 ->whereNotNull('approved_at');
         } elseif ($user->role === UserRoleEnum::OFFICE) {
             $query->where('office_id', $user->office_id);
         }
-        
+       
+
+    
         if (isset($filters['governorate_id'])) {
             $query->forGovernorate((int) $filters['governorate_id']);
         }
@@ -67,8 +66,17 @@ class PropertyService implements PropertyServiceInterface
             $query->maxPrice($filters['max_price']);
         }
 
+        if (isset($filters['min_area'])) {
+           $query->minArea($filters['min_area']);
+        }
+
+        if (isset($filters['max_area'])) {
+           $query->maxArea($filters['max_area']);
+        }
+
         return $query->latest()->paginate(15);
     }
+
 
     public function show(?User $user, Property $property): Property
     {

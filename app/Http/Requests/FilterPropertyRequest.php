@@ -55,6 +55,36 @@ class FilterPropertyRequest extends FormRequest
                 'numeric',
                 'min:0',
             ],
+
+            'min_area' => [
+                'sometimes',
+                'numeric',
+                'min:0',
+                function (string $attribute, mixed $value, Closure $fail) {
+                  $max = $this->query('max_area');
+
+                  if ($max !== null && $max !== '' && is_numeric($max)) {
+                      if ((float) $value > (float) $max) {
+                        $fail('الحد الأدنى للمساحة يجب أن يكون أقل من أو يساوي الحد الأقصى.');
+                           }
+                         }
+                     },
+             ],
+
+            'max_area' => [
+                'sometimes',
+                'numeric',
+                'min:0',
+                 function (string $attribute, mixed $value, Closure $fail) {
+                     $min = $this->query('min_area');
+
+                      if ($min !== null && $min !== '' && is_numeric($min)) {
+                         if ((float) $value < (float) $min) {
+                           $fail('الحد الأقصى للمساحة يجب أن يكون أكبر من أو يساوي الحد الأدنى.');
+                                }
+                             }
+                         },
+            ],
         ];
     }
 
@@ -73,6 +103,11 @@ class FilterPropertyRequest extends FormRequest
 
             'max_price.numeric'  => 'الحد الأقصى للسعر يجب أن يكون قيمة رقمية.',
             'max_price.min'      => 'الحد الأقصى للسعر لا يمكن أن يكون سالباً.',
+            'min_area.numeric' => 'الحد الأدنى للمساحة يجب أن يكون قيمة رقمية.',
+
+            'min_area.min' => 'الحد الأدنى للمساحة لا يمكن أن يكون سالباً.',
+            'max_area.numeric' => 'الحد الأقصى للمساحة يجب أن يكون قيمة رقمية.',
+            'max_area.min' => 'الحد الأقصى للمساحة لا يمكن أن يكون سالباً.',
         ];
     }
 
@@ -84,6 +119,8 @@ class FilterPropertyRequest extends FormRequest
             'property_type'  => 'نوع العقار',
             'min_price'      => 'الحد الأدنى للسعر',
             'max_price'      => 'الحد الأقصى للسعر',
+            'min_area' => 'الحد الأدنى للمساحة',
+            'max_area' => 'الحد الأقصى للمساحة',
         ];
     }
 }
