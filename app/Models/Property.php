@@ -6,6 +6,7 @@ use App\Enums\CurrencyEnum;
 use App\Enums\ListingTypeEnum;
 use App\Enums\PropertyStatusEnum;
 use App\Enums\PropertyTypeEnum;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -47,6 +48,35 @@ class Property extends Model
             'approved_at' => 'datetime',
         ];
     }
+
+ 
+    public function scopeForGovernorate(Builder $query, int $governorateId): Builder
+    {
+        return $query->where('governorate_id', $governorateId);
+    }
+
+    public function scopeOfListingType(Builder $query, ListingTypeEnum $type): Builder
+    {
+        return $query->where('listing_type', $type->value);
+    }
+
+
+    public function scopeOfPropertyType(Builder $query, PropertyTypeEnum $type): Builder
+    {
+        return $query->where('property_type', $type->value);
+    }
+
+    public function scopeMinPrice(Builder $query, float|int $min): Builder
+    {
+        return $query->where('price', '>=', $min);
+    }
+
+    public function scopeMaxPrice(Builder $query, float|int $max): Builder
+    {
+        return $query->where('price', '<=', $max);
+    }
+
+
 
     public function office(): BelongsTo
     {

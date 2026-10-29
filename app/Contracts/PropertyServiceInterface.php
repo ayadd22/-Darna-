@@ -4,18 +4,18 @@ namespace App\Contracts;
 
 use App\Models\Property;
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 interface PropertyServiceInterface
 {
-    /**
-     * Create a new property on behalf of the given user.
-     *
-     * The implementation is responsible for:
-     * - Deriving office_id from the authenticated user when the role is OFFICE.
-     * - Setting the initial status to PropertyStatusEnum::PENDING_APPROVAL.
-     *
-     * @param  array<string, mixed>  $validatedData  Data already validated by StorePropertyRequest.
-     * @param  User  $user  The authenticated user performing the creation.
-     */
     public function create(array $validatedData, User $user): Property;
+    public function list(?User $user, array $filters = []): LengthAwarePaginator;
+    public function show(?User $user, Property $property): Property;
+    public function update(array $validatedData, Property $property): Property;
+    public function destroy(User $user, Property $property): void;
+    public function approve(User $user, Property $property): Property;
+    public function reject(User $user, Property $property): Property;
+    public function featuredProperties(int $limit = 6): Collection;
+    public function governorateStats(): Collection;
 }
