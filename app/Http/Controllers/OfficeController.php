@@ -7,15 +7,23 @@ use Illuminate\Http\JsonResponse;
 
 class OfficeController extends Controller
 {
-    public function index(): JsonResponse
-    {
-        $offices = Office::query()
-            ->orderBy('name')
-            ->get();
+ public function index(): JsonResponse
+  {
+    $offices = Office::query()
+        ->where('is_active', true)
+        ->select([
+            'id',
+            'name',
+            'phone',
+            'address',
+        ])
+        ->orderBy('name')
+        ->get();
 
-        return response()->json([
-            'message' => 'تم جلب المكاتب بنجاح.',
-            'data' => $offices,
-        ]);
-    }
+    return response()->json([
+        'message' => 'تم جلب المكاتب بنجاح.',
+        'data' => $offices,
+    ]);
+   }
+
 }

@@ -27,6 +27,10 @@ class PropertyImageService implements PropertyImageServiceInterface
         $directory = "properties/{$property->id}";
         $path = $file->storeAs($directory, $filename, self::DISK);
 
+          if (! $path) {
+             throw new \RuntimeException('فشل حفظ صورة العقار.');
+            }
+
         return $property->images()->create([
             'path'       => $path,
             'alt_text'   => $altText,
@@ -49,4 +53,18 @@ class PropertyImageService implements PropertyImageServiceInterface
 
         $image->delete();
     }
+
+   public function deleteAll(Property $property): void
+  {
+    $images = $property->images;
+
+    foreach ($images as $image) {
+        if (Storage::disk(self::DISK)->exists($image->path)) {
+            Storage::disk(self::DISK)->delete($image->path);
+        }
+
+        $image->delete();
+    }
+  }
+
 }

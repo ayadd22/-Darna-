@@ -14,10 +14,16 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Contracts\PropertyImageServiceInterface;
+
 
 class PropertyService implements PropertyServiceInterface
 {
     
+
+    public function __construct(
+    private readonly PropertyImageServiceInterface $propertyImageService
+     ) {}
 
     public function create(array $validatedData, User $user): Property
     {
@@ -114,16 +120,18 @@ class PropertyService implements PropertyServiceInterface
 
   
 
-    public function destroy(User $user, Property $property): void
-    {
-        abort_unless($user->can('delete', $property), 403);
+  public function destroy(User $user, Property $property): void
+   {
+    abort_unless($user->can('delete', $property), 403);
 
-        $id = $property->id;
+    $id = $property->id;
 
-        $property->delete();
+    $this->propertyImageService->deleteAll($property);
 
-        $this->invalidatePropertyCaches($id);
-    }
+    $property->delete();
+
+    $this->invalidatePropertyCaches($id);
+  }
 
  
 
@@ -192,12 +200,13 @@ class PropertyService implements PropertyServiceInterface
         return Cache::remember(
             PropertyCacheKeys::governorateStats(),
             PropertyCacheKeys::TTL_GOVERNORATE_STATS,
-            fn () => DB::table('properties')
-                ->select('governorate_id', DB::raw('COUNT(*) as total'))
-                ->where('status', PropertyStatusEnum::AVAILABLE->value)
-                ->groupBy('governorate_id')
-                ->orderBy('governorate_id')
-                ->get()
+           fn () => DB::table('properties')
+            ->select('governorate_id', DB::raw('COUNT(*) as total'))
+            ->where('status', PropertyStatusEnum::AVAILABLE->value)
+            ->whereNotNull('approved_at')
+            ->groupBy('governorate_id')
+            ->orderBy('governorate_id')
+            ->get()
         );
     }
 

@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PropertyController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GovernorateController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\OwnerController;
-
+use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\OptionalSanctumAuth;
 
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -14,45 +14,45 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth:sanctum');
 
-// ----- Static collection endpoints  -----
+// Public property endpoints
 
 Route::get('/properties/featured', [PropertyController::class, 'featured']);
 
 Route::get('/properties/stats/by-governorate', [PropertyController::class, 'governorateStats']);
 
-// ----- Standard property CRUD + approval -----
+Route::get('/properties', [PropertyController::class, 'index'])
+    ->middleware(OptionalSanctumAuth::class);
 
-Route::get('/properties', [PropertyController::class, 'index']);
+Route::get('/properties/{property}', [PropertyController::class, 'show'])
+    ->middleware(OptionalSanctumAuth::class);
 
-Route::post('/properties', [PropertyController::class, 'store'])
-    ->middleware('auth:sanctum');
+// Property management: Admin and Office
 
-Route::get('/properties/{property}', [PropertyController::class, 'show']);
+Route::middleware(['auth:sanctum', 'role:admin,office'])->group(function () {
+    Route::post('/properties', [PropertyController::class, 'store']);
 
-Route::put('/properties/{property}', [PropertyController::class, 'update'])
-    ->middleware('auth:sanctum');
+    Route::put('/properties/{property}', [PropertyController::class, 'update']);
 
-Route::delete('/properties/{property}', [PropertyController::class, 'destroy'])
-    ->middleware('auth:sanctum');
+    Route::delete('/properties/{property}', [PropertyController::class, 'destroy']);
 
-Route::patch('/properties/{property}/approve', [PropertyController::class, 'approve'])
-    ->middleware('auth:sanctum');
+    Route::post('/properties/{property}/images', [PropertyController::class, 'storeImage']);
 
-Route::patch('/properties/{property}/reject', [PropertyController::class, 'reject'])
-    ->middleware('auth:sanctum');
-// ----- Property image management -----
+    Route::delete('/properties/{property}/images/{image}', [PropertyController::class, 'destroyImage']);
+});
 
-Route::post('/properties/{property}/images', [PropertyController::class, 'storeImage'])
-    ->middleware('auth:sanctum');
+// Property approval: Admin only
 
-Route::delete('/properties/{property}/images/{image}', [PropertyController::class, 'destroyImage'])
-    ->middleware('auth:sanctum');
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::patch('/properties/{property}/approve', [PropertyController::class, 'approve']);
 
+    Route::patch('/properties/{property}/reject', [PropertyController::class, 'reject']);
+});
+
+// Base data
 
 Route::get('/governorates', [GovernorateController::class, 'index']);
-
 
 Route::get('/offices', [OfficeController::class, 'index']);
 
 Route::get('/owners', [OwnerController::class, 'index'])
-    ->middleware('auth:sanctum');
+    ->middleware(['auth:sanctum', 'role:admin,office']);
