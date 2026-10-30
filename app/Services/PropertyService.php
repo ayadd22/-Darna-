@@ -121,17 +121,19 @@ class PropertyService implements PropertyServiceInterface
   
 
   public function destroy(User $user, Property $property): void
-   {
+  {
     abort_unless($user->can('delete', $property), 403);
 
     $id = $property->id;
 
-    $this->propertyImageService->deleteAll($property);
+    DB::transaction(function () use ($property) {
+        $this->propertyImageService->deleteAll($property);
 
-    $property->delete();
+        $property->delete();
+    });
 
     $this->invalidatePropertyCaches($id);
-  }
+  }  
 
  
 

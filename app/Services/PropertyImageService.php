@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+
 
 class PropertyImageService implements PropertyImageServiceInterface
 {
@@ -39,32 +41,37 @@ class PropertyImageService implements PropertyImageServiceInterface
     }
 
     public function destroy(Property $property, Image $image, User $user): void
-    {
-        abort_unless(
-            $image->imageable_type === Property::class
-                && $image->imageable_id === $property->id,
-            404
-        );
-        abort_unless($user->can('update', $property), 403);
+   {
+    abort_unless(
+        $image->imageable_type === Property::class
+            && $image->imageable_id === $property->id,
+        404
+    );
 
-        if (Storage::disk(self::DISK)->exists($image->path)) {
-            Storage::disk(self::DISK)->delete($image->path);
-        }
+    abort_unless($user->can('update', $property), 403);
 
+    $path = $image->path;
+
+    DB::transaction(function () use ($image, $path) {
         $image->delete();
-    }
 
-   public function deleteAll(Property $property): void
-  {
-    $images = $property->images;
-
-    foreach ($images as $image) {
-        if (Storage::disk(self::DISK)->exists($image->path)) {
-            Storage::disk(self::DISK)->delete($image->path);
-        }
-
-        $image->delete();
-    }
+        DB::afterCommit(function () use ($path) {
+            Storage::disk(self::DISK)->delete($path);
+        });
+     });
   }
+  public function deleteAll(Property $property): void
+  {
+    $paths = $property->images()->pluck('path')->all();
 
+    DB::transaction(function () use ($property, $paths) {
+        $property->images()->delete();
+
+        DB::afterCommit(function () use ($paths) {
+            foreach ($paths as $path) {
+                Storage::disk(self::DISK)->delete($path);
+            }
+        });
+     });
+   }
 }

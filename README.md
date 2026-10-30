@@ -801,7 +801,7 @@ Example:
         "description": "A spacious apartment.",
         "property_type": "apartment",
         "listing_type": "sale",
-        "status": "available",
+        "status": "pending_approval",
         "price": "120000.00",
         "currency": "USD",
         "area": "120.00",
