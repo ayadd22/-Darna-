@@ -6,7 +6,7 @@ namespace App\Cache;
 final class PropertyCacheKeys
 {
    
-
+    public const FEATURED_LIMITS = 'properties:featured:limits';
    
     public const TTL_GOVERNORATE_STATS = 600;
 
@@ -25,10 +25,10 @@ final class PropertyCacheKeys
     }
 
  
-    public static function featured(): string
-    {
-        return 'properties:featured';
-    }
+   public static function featured(int $limit = 6): string
+   {
+    return "properties:featured:{$limit}";
+   }
 
   
     public static function governorateStats(): string

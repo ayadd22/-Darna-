@@ -180,19 +180,29 @@ class PropertyService implements PropertyServiceInterface
 
     public function featuredProperties(int $limit = 6): Collection
     {
-        return Cache::remember(
-            PropertyCacheKeys::featured(),
-            PropertyCacheKeys::TTL_FEATURED,
-            fn () => Property::query()
-                ->with(['office', 'owner', 'governorate'])
-                ->where('status', PropertyStatusEnum::AVAILABLE)
-                ->whereNotNull('approved_at')
-                ->orderByDesc('approved_at')
-                ->orderByDesc('id')
-                ->limit($limit)
-                ->get()
-        );
+    $limitsKey = PropertyCacheKeys::FEATURED_LIMITS;
+
+    $cachedLimits = Cache::get($limitsKey, []);
+
+    if (! in_array($limit, $cachedLimits, true)) {
+        $cachedLimits[] = $limit;
+
+        Cache::forever($limitsKey, $cachedLimits);
     }
+
+    return Cache::remember(
+        PropertyCacheKeys::featured($limit),
+        PropertyCacheKeys::TTL_FEATURED,
+        fn () => Property::query()
+            ->with(['office', 'owner', 'governorate'])
+            ->where('status', PropertyStatusEnum::AVAILABLE)
+            ->whereNotNull('approved_at')
+            ->orderByDesc('approved_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get()
+      );
+   }
 
 
     public function governorateStats(): Collection
@@ -219,8 +229,14 @@ class PropertyService implements PropertyServiceInterface
 
   
     private function invalidateCollectionCaches(): void
-    {
-        Cache::forget(PropertyCacheKeys::featured());
-        Cache::forget(PropertyCacheKeys::governorateStats());
+   {
+    $limits = Cache::get(PropertyCacheKeys::FEATURED_LIMITS, []);
+
+    foreach ($limits as $limit) {
+        Cache::forget(PropertyCacheKeys::featured($limit));
     }
+
+    Cache::forget(PropertyCacheKeys::FEATURED_LIMITS);
+    Cache::forget(PropertyCacheKeys::governorateStats());
+   }
 }
